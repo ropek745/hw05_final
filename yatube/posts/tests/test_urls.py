@@ -1,5 +1,4 @@
 from http import HTTPStatus
-from http.client import FORBIDDEN
 
 from django.test import TestCase, Client
 from django.urls import reverse
@@ -27,7 +26,9 @@ NOT_FOUND_ULR = '/unexisting_page/'
 
 FOLLOW_INDEX = reverse('posts:follow_index')
 PROFILE_FOLLOW = reverse('posts:profile_follow', kwargs={'username': USERNAME})
-PROFILE_UNFOLLOW = reverse('posts:profile_unfollow', kwargs={'username': USERNAME})
+PROFILE_UNFOLLOW = reverse(
+    'posts:profile_unfollow', kwargs={'username': USERNAME}
+)
 
 CREATE_REDIRECT = f'{LOGIN}?next={CREATE_URL}'
 

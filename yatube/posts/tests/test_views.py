@@ -134,16 +134,16 @@ class PostsPagesTest(TestCase):
         response = self.authorized_client.get(INDEX_FOLLOW)
         self.assertEqual(len(response.context['page_obj']), 0)
 
-    def test_authorized_follow(self): 
-        """Проверка возможности подписаться авторизованному пользователю 
-           на других пользователей. 
+    def test_authorized_follow(self):
+        """Проверка возможности подписаться авторизованному пользователю
+           на других пользователей.
         """
-        self.author.get(FOLLOW) 
-        follow = Follow.objects.filter(user=self.authors, author=self.user) 
-        self.assertTrue(follow.exists()) 
+        self.author.get(FOLLOW)
+        follow = Follow.objects.filter(user=self.authors, author=self.user)
+        self.assertTrue(follow.exists())
 
     def test_unfollow(self):
-        self.authorized_client.get(UNFOLLOW) 
+        self.authorized_client.get(UNFOLLOW)
         follow = Follow.objects.filter(user=self.authors, author=self.user)
         self.assertFalse(follow.exists())
 
@@ -202,4 +202,3 @@ class PostsPagesTest(TestCase):
             self.assertEqual(response_1, response_2)
             cache.clear()
             self.assertNotEqual(response_1, response_2)
-        
