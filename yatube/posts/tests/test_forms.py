@@ -90,7 +90,6 @@ class PostCreateFormTests(TestCase):
             content=IMAGE_GIF_2,
             content_type=IMAGE_TYPE_2,
         )
-        
 
     @classmethod
     def tearDownClass(cls):
@@ -184,7 +183,7 @@ class PostCreateFormTests(TestCase):
         response = self.anomymus.get(self.COMMENT)
         self.assertEqual(response.status_code, 302)
         self.assertFalse(Comment.objects.exists())
-    
+
     def test_anonymus_not_create_post(self):
         """Попытка анонима создать post."""
         Post.objects.all().delete()
@@ -206,4 +205,3 @@ class PostCreateFormTests(TestCase):
         self.assertRedirects(response, self.EDIT_REDIRECT)
         self.assertNotEqual(post.text, form_data['text'])
         self.assertNotEqual(post.group.id, form_data['group'])
-    

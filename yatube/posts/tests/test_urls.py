@@ -121,4 +121,3 @@ class PostURLTests(TestCase):
         for url, client, template in template_url_names:
             with self.subTest(url=url):
                 self.assertTemplateUsed(client.get(url), template)
-    

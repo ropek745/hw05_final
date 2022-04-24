@@ -1,6 +1,6 @@
 from django.test import TestCase
 
-from ..models import Group, Post, Follow, User
+from ..models import Group, Post, User
 
 USERNAME_1 = 'Roman'
 USERNAME_2 = 'Pekarev'
@@ -21,6 +21,7 @@ class PostModelTest(TestCase):
             text='Текстовая пост',
         )
         cls.author = User.objects.create_user(username=USERNAME_2)
+
     def test_models_have_correct_object_names(self):
         '''Проверяем, что у моделей корректно работает __str__.'''
         self.assertEqual(self.group.title, str(self.group))

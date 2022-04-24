@@ -22,7 +22,9 @@ def group_posts(request, slug):
 
 def profile(request, username):
     author = get_object_or_404(User, username=username)
-    follow = Follow.objects.filter(user__username=request.user.username, author=author).all()
+    follow = Follow.objects.filter(
+        user__username=request.user.username, 
+        author=author).all()
     return render(request, 'posts/profile.html', {
         'author': author,
         'page_obj': paginator_page(request, author.posts.all()),
@@ -91,7 +93,7 @@ def follow_index(request):
     context = {
         'page_obj': paginator_page(request, post_follow)
     }
-    return render(request,'posts/follow.html',context)
+    return render(request, 'posts/follow.html', context)
 
 
 @login_required
@@ -103,6 +105,7 @@ def profile_follow(request, username):
             author=author
         )
     return redirect('posts:profile', username=username)
+
 
 @login_required
 def profile_unfollow(request, username):

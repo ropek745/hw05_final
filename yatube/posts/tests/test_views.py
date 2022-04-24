@@ -82,7 +82,6 @@ class PostsPagesTest(TestCase):
             author=cls.following
         )
 
-
     @classmethod
     def tearDownClass(cls):
         super().tearDownClass()
@@ -110,7 +109,6 @@ class PostsPagesTest(TestCase):
                 else:
                     post = response.context['post']
                     self.check_post_context(post)
-
 
     def test_detail_page_show_correct(self):
         response = self.authorized_client.get(self.POST_DETAIL_URL)
