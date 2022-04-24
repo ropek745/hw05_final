@@ -23,7 +23,7 @@ def group_posts(request, slug):
 def profile(request, username):
     author = get_object_or_404(User, username=username)
     follow = Follow.objects.filter(
-        user__username=request.user.username, 
+        user__username=request.user.username,
         author=author).all()
     return render(request, 'posts/profile.html', {
         'author': author,

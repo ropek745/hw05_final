@@ -103,8 +103,7 @@ class Follow(models.Model):
     def __str__(self):
         return (self.user.username, self.author.username)
 
-
-    class Meta: 
+    class Meta:
         constraints = [
             models.UniqueConstraint(
                 fields=['user', 'author'], name='unique_following'
