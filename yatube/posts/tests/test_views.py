@@ -53,9 +53,8 @@ class PostsPagesTest(TestCase):
     @classmethod
     def setUpClass(cls) -> None:
         super().setUpClass()
-        # Создадим запись в БД
         cls.user = User.objects.create_user(username=USERNAME)
-        cls.authors = User.objects.create_user(username=AUTHOR)
+        cls.following = User.objects.create_user(username=AUTHOR)
         cls.group = Group.objects.create(
             title=GROUP_TITLE,
             slug=GROUP_SLUG,
@@ -72,18 +71,17 @@ class PostsPagesTest(TestCase):
             group=cls.group,
             image=uploaded
         )
-        cls.follow = Follow.objects.create(
-            user=cls.user,
-            author=cls.authors
-        )
         cls.POST_DETAIL_URL = reverse('posts:post_detail', args=[cls.post.id])
         cls.POST_EDIT_URL = reverse('posts:post_edit', args=[cls.post.id])
+        cls.author = Client()
+        cls.author.force_login(cls.following)
+        cls.authorized_client = Client()
+        cls.authorized_client.force_login(cls.user)
+        cls.follow = Follow.objects.create(
+            user=cls.user,
+            author=cls.following
+        )
 
-    def setUp(self):
-        self.author = Client()
-        self.author.force_login(self.authors)
-        self.authorized_client = Client()
-        self.authorized_client.force_login(self.user)
 
     @classmethod
     def tearDownClass(cls):
@@ -105,10 +103,14 @@ class PostsPagesTest(TestCase):
         ]
         for url in urls:
             with self.subTest(url=url):
-                response = self.authorized_client.get(url)
-                self.assertEqual(len(response.context['page_obj']), 1)
-                post = response.context['page_obj'][0]
-                self.check_post_context(post)
+                response = self.author.get(url)
+                if 'page_obj' in response.context:
+                    self.assertEqual(len(response.context['page_obj']), 1)
+                    post = response.context['page_obj'][0]
+                else:
+                    post = response.context['post']
+                    self.check_post_context(post)
+
 
     def test_detail_page_show_correct(self):
         response = self.authorized_client.get(self.POST_DETAIL_URL)
@@ -139,12 +141,12 @@ class PostsPagesTest(TestCase):
            на других пользователей.
         """
         self.author.get(FOLLOW)
-        follow = Follow.objects.filter(user=self.authors, author=self.user)
+        follow = Follow.objects.filter(user=self.following, author=self.user)
         self.assertTrue(follow.exists())
 
     def test_unfollow(self):
         self.authorized_client.get(UNFOLLOW)
-        follow = Follow.objects.filter(user=self.authors, author=self.user)
+        follow = Follow.objects.filter(user=self.following, author=self.user)
         self.assertFalse(follow.exists())
 
     def test_new_post_in_another_group(self):

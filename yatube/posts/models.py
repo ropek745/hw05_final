@@ -1,3 +1,4 @@
+from asyncio import constants
 from django.contrib.auth import get_user_model
 from django.db import models
 
@@ -82,6 +83,10 @@ class Comment(models.Model):
         verbose_name='Дата публикации комментария'
     )
 
+    class Meta: 
+        ordering = ('-created',) 
+        verbose_name = 'Комментарий' 
+        verbose_name_plural = 'Комментарии'
 
 class Follow(models.Model):
     user = models.ForeignKey(
@@ -96,4 +101,11 @@ class Follow(models.Model):
     )
 
     def __str__(self):
-        return self.user
+        return (self.user.username, self.author.username)
+
+    class Meta: 
+        constraints = [
+            models.UniqueConstraint(fields=['user', 'author'], name='unique_following')
+        ]
+        verbose_name = 'Подписка' 
+        verbose_name_plural = 'Подписки'

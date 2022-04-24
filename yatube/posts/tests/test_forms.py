@@ -9,10 +9,30 @@ from django.urls import reverse
 
 from ..models import Group, Post, User, Comment
 
-
+IMAGE_GIF_1 = (
+    b'\x47\x49\x46\x38\x39\x61\x02\x00'
+    b'\x01\x00\x80\x00\x00\x00\x00\x00'
+    b'\xFF\xFF\xFF\x21\xF9\x04\x00\x00'
+    b'\x00\x00\x00\x2C\x00\x00\x00\x00'
+    b'\x02\x00\x01\x00\x00\x02\x02\x0C'
+    b'\x0A\x00\x3B'
+)
+IMAGE_GIF_2 = (
+    b'\x47\x49\x46\x38\x39\x61\x02\x00'
+    b'\x01\x00\x80\x00\x00\x00\x00\x00'
+    b'\xFF\xFF\xFF\x21\xF9\x04\x00\x00'
+    b'\x00\x00\x00\x2C\x00\x00\x00\x00'
+    b'\x02\x00\x01\x00\x00\x02\x02\x0C'
+    b'\x0A\x00\x3A'
+)
+IMAGE_NAME = 'small.gif'
+IMAGE_NAME_2 = 'small_2.jpg'
+IMAGE_TYPE_1 = 'image/gif'
+IMAGE_TYPE_2 = 'gif/image'
 GROUP_TITLE = 'Тестовая группа'
 GROUP_SLUG = 'test-slug'
 GROUP_DESCRIPTION = 'Тестовое описание'
+LOGIN = reverse('users:login')
 
 GROUP_TITLE_NEW = 'Новая тестовая группа'
 GROUP_SLUG_NEW = 'test-slug-new'
@@ -51,22 +71,26 @@ class PostCreateFormTests(TestCase):
             text=POST_TEXT,
             group=cls.group
         )
-        cls.comment = Comment.objects.create(
-            author=cls.user,
-            text=COMMENT_TEXT,
-            post=cls.post
-        )
         cls.COMMENT = reverse(
             'posts:add_comment', kwargs={'post_id': cls.post.id}
         )
         cls.POST_DETAIL_URL = reverse('posts:post_detail', args=[cls.post.id])
         cls.POST_EDIT_URL = reverse('posts:post_edit', args=[cls.post.id])
-
-    def setUp(self):
-        # Создаем неавторизованный клиент
-        self.authorized_client = Client()
-        # Авторизуем клиента
-        self.authorized_client.force_login(self.user)
+        cls.EDIT_REDIRECT = f'{LOGIN}?next={cls.POST_EDIT_URL}'
+        cls.anomymus = Client()
+        cls.authorized_client = Client()
+        cls.authorized_client.force_login(cls.user)
+        cls.image = SimpleUploadedFile(
+            name=IMAGE_NAME,
+            content=IMAGE_GIF_1,
+            content_type=IMAGE_TYPE_1,
+        )
+        cls.image_2 = SimpleUploadedFile(
+            name=IMAGE_NAME_2,
+            content=IMAGE_GIF_2,
+            content_type=IMAGE_TYPE_2,
+        )
+        
 
     @classmethod
     def tearDownClass(cls):
@@ -75,23 +99,10 @@ class PostCreateFormTests(TestCase):
 
     def test_post_create(self):
         Post.objects.all().delete()
-        small_gif = (
-            b'\x47\x49\x46\x38\x39\x61\x02\x00'
-            b'\x01\x00\x80\x00\x00\x00\x00\x00'
-            b'\xFF\xFF\xFF\x21\xF9\x04\x00\x00'
-            b'\x00\x00\x00\x2C\x00\x00\x00\x00'
-            b'\x02\x00\x01\x00\x00\x02\x02\x0C'
-            b'\x0A\x00\x3B'
-        )
-        uploaded = SimpleUploadedFile(
-            name='small.gif',
-            content=small_gif,
-            content_type='image/gif'
-        )
         form_data = {
             'text': POST_TEXT,
             'group': self.group.id,
-            'image': uploaded
+            'image': self.image
         }
         response = self.authorized_client.post(
             CREATE_URL,
@@ -101,20 +112,16 @@ class PostCreateFormTests(TestCase):
         self.assertEqual(post.text, form_data['text'])
         self.assertEqual(post.author, self.user)
         self.assertEqual(post.group.id, form_data['group'])
+        self.assertEqual(post.image.name, f"posts/{form_data['image'].name}")
         self.assertRedirects(response, PROFILE_URL)
         self.assertEqual(Post.objects.count(), 1)
-        self.assertTrue(
-            Post.objects.filter(
-                group=self.group.id,
-                text=POST_TEXT,
-                image='posts/small.gif'
-            ).exists())
 
     def test_post_edit(self):
         # Создаём форму
         form_data = {
             'text': NEW_POST_TEXT,
-            'group': self.group_new.id
+            'group': self.group_new.id,
+            'image': self.image_2
         }
         response = self.authorized_client.post(
             self.POST_EDIT_URL,
@@ -125,6 +132,7 @@ class PostCreateFormTests(TestCase):
         self.assertEqual(post.text, form_data['text'])
         self.assertEqual(post.group.id, form_data['group'])
         self.assertEqual(post.author, self.post.author)
+        self.assertEqual(post.image.name, f"posts/{form_data['image'].name}")
         self.assertRedirects(response, self.POST_DETAIL_URL)
 
     def test_form_create_and_edit_post_is_valid(self):
@@ -144,6 +152,7 @@ class PostCreateFormTests(TestCase):
                     self.assertIsInstance(form_field, expected_value)
 
     def test_comment_form(self):
+        Comment.objects.all().delete()
         form_data = {
             'text': COMMENT_TEXT,
         }
@@ -152,11 +161,11 @@ class PostCreateFormTests(TestCase):
             data=form_data,
             follow=True
         )
-        last_comment = (Comment.objects.order_by('id')[0])
-        self.assertRedirects(
-            response, self.POST_DETAIL_URL
-        )
-        self.assertEqual(form_data['text'], (last_comment.text))
+        comment = Comment.objects.all()[0]
+        self.assertEqual(form_data['text'], (form_data['text']))
+        self.assertEqual(comment.author, self.user)
+        self.assertEqual(comment.post, self.post)
+        self.assertRedirects(response, self.POST_DETAIL_URL)
 
     def test_add_comments_show_correct_context(self):
         response = self.authorized_client.get(self.POST_DETAIL_URL)
@@ -168,3 +177,33 @@ class PostCreateFormTests(TestCase):
             with self.subTest(field=field):
                 form_field = response.context.get('form').fields.get(field)
                 self.assertIsInstance(form_field, expected_value)
+
+    def test_anonymus_not_create_comment(self):
+        """Попытка анонима создать комментарий."""
+        Comment.objects.all().delete()
+        response = self.anomymus.get(self.COMMENT)
+        self.assertEqual(response.status_code, 302)
+        self.assertFalse(Comment.objects.exists())
+    
+    def test_anonymus_not_create_post(self):
+        """Попытка анонима создать post."""
+        Post.objects.all().delete()
+        response = self.anomymus.get(CREATE_URL)
+        self.assertEqual(response.status_code, 302)
+        self.assertFalse(Comment.objects.exists())
+
+    def test_anonymus_edit_post(self):
+        form_data = {
+            'text': NEW_POST_TEXT,
+            'group': self.group_new.id,
+        }
+        response = self.anomymus.post(
+            self.POST_EDIT_URL,
+            data=form_data,
+            follow=True,
+        )
+        post = Post.objects.get()
+        self.assertRedirects(response, self.EDIT_REDIRECT)
+        self.assertNotEqual(post.text, form_data['text'])
+        self.assertNotEqual(post.group.id, form_data['group'])
+    

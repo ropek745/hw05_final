@@ -31,6 +31,9 @@ PROFILE_UNFOLLOW = reverse(
 )
 
 CREATE_REDIRECT = f'{LOGIN}?next={CREATE_URL}'
+FOLLOW_REDIRECT = f'{LOGIN}?next={FOLLOW_INDEX}'
+PROFILE_FOLLOW_REDIRECT = f'{LOGIN}?next={PROFILE_URL}follow/'
+PROFILE_UNFOLLOW_REDIRECT = f'{LOGIN}?next={PROFILE_URL}unfollow/'
 
 
 class PostURLTests(TestCase):
@@ -54,19 +57,14 @@ class PostURLTests(TestCase):
         cls.POST_EDIT = reverse(
             'posts:post_edit', kwargs={'post_id': cls.post.id}
         )
-        cls.COMMENT = reverse(
-            'posts:add_comment', kwargs={'post_id': cls.post.id}
-        )
         cls.EDIT_REDIRECT = f'{LOGIN}?next={cls.POST_EDIT}'
         cls.COMMENT_REDIRECT = f'{LOGIN}?next={cls.POST_EDIT}comment/'
-
-    def setUp(self):
-        self.guest = Client()
-        self.another = Client()
-        self.author = Client()
-        self.authorized_client_new = Client()
-        self.author.force_login(self.user)
-        self.authorized_client_new.force_login(self.new_user)
+        cls.guest = Client()
+        cls.another = Client()
+        cls.author = Client()
+        cls.authorized_client_new = Client()
+        cls.author.force_login(cls.user)
+        cls.authorized_client_new.force_login(cls.new_user)
 
     def test_url_at_desired_location_for_any_user(self):
         """Проверка доступности адресов страниц для пользователя"""
@@ -81,11 +79,12 @@ class PostURLTests(TestCase):
             [self.POST_EDIT, self.author, OK],
             [self.POST_EDIT, self.another, REDIRECT],
             [NOT_FOUND_ULR, self.guest, FAILED],
-            [self.COMMENT, self.guest, REDIRECT],
-            [self.COMMENT, self.author, REDIRECT],
             [FOLLOW_INDEX, self.author, OK],
             [PROFILE_FOLLOW, self.author, REDIRECT],
-            [PROFILE_UNFOLLOW, self.guest, REDIRECT]
+            [PROFILE_UNFOLLOW, self.guest, REDIRECT],
+            [FOLLOW_INDEX, self.guest, REDIRECT],
+            [PROFILE_FOLLOW, self.guest, REDIRECT],
+            [PROFILE_UNFOLLOW, self.another, REDIRECT],
         ]
         for url, client, status in urls_names:
             with self.subTest(url=url, status=status):
@@ -100,7 +99,9 @@ class PostURLTests(TestCase):
             [CREATE_URL, self.guest, CREATE_REDIRECT],
             [self.POST_EDIT, self.guest, self.EDIT_REDIRECT],
             [self.POST_EDIT, self.authorized_client_new, self.POST_DETAIL],
-            [self.COMMENT, self.guest, self.COMMENT_REDIRECT]
+            [FOLLOW_INDEX, self.guest, FOLLOW_INDEX],
+            [PROFILE_FOLLOW, self.guest, PROFILE_FOLLOW_REDIRECT],
+            [PROFILE_UNFOLLOW, self.guest, PROFILE_UNFOLLOW_REDIRECT],
         ]
         for url, client, redirect in urls_redirect_list:
             with self.subTest(url=url, redirect=redirect):
@@ -120,3 +121,4 @@ class PostURLTests(TestCase):
         for url, client, template in template_url_names:
             with self.subTest(url=url):
                 self.assertTemplateUsed(client.get(url), template)
+    
