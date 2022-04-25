@@ -99,11 +99,11 @@ class PostsPagesTest(TestCase):
             with self.subTest(url=url):
                 response = self.follow.get(url)
                 with self.subTest(url=url):
-                    if 'page_obj' in response.context: 
+                    if 'page_obj' in response.context:
                         self.assertEqual(len(response.context['page_obj']), 1)
                         post = response.context['page_obj'][0]
                     else:
-                        post = response.context['post'] 
+                        post = response.context['post']
                     self.assertEqual(post.text, self.post.text)
                     self.assertEqual(post.group, self.post.group)
                     self.assertEqual(post.author, self.post.author)
@@ -130,8 +130,6 @@ class PostsPagesTest(TestCase):
         cache.clear()
         response_3 = self.authorized.get(INDEX_URL).content
         self.assertNotEqual(response_1, response_3)
-
-    # Тесты подписок
 
     def test_post_following_author(self):
         """
@@ -165,6 +163,7 @@ class PostsPagesTest(TestCase):
         self.assertNotIn(
             self.post,
             self.authorized.get(GROUP_LIST_URL_2).context['page_obj'])
+
 
 class PaginatorViewsTest(TestCase):
     @classmethod

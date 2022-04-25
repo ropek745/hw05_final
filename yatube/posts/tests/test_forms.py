@@ -124,7 +124,10 @@ class PostCreateFormTests(TestCase):
         self.assertEqual(post.text, form_data['text'])
         self.assertEqual(post.author, self.user)
         self.assertEqual(post.group.id, form_data['group'])
-        self.assertEqual(post.image.name, f"{app_name}/{form_data['image'].name}")
+        self.assertEqual(
+            post.image.name,
+            f"{app_name}/{form_data['image'].name}"
+        )
         self.assertRedirects(response, PROFILE_URL)
 
     def test_post_edit(self):
@@ -142,7 +145,10 @@ class PostCreateFormTests(TestCase):
         self.assertEqual(post.text, form_data['text'])
         self.assertEqual(post.group.id, form_data['group'])
         self.assertEqual(post.author, self.post.author)
-        self.assertEqual(post.image.name, f"{app_name}/{form_data['image'].name}")
+        self.assertEqual(
+            post.image.name,
+            f"{app_name}/{form_data['image'].name}"
+        )
         self.assertRedirects(response, self.POST_DETAIL_URL)
 
     def test_form_create_and_edit_post_is_valid(self):

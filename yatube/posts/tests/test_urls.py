@@ -100,7 +100,7 @@ class PostURLTests(TestCase):
             [self.POST_EDIT, self.guest, self.EDIT_REDIRECT],
             [FOLLOW_INDEX, self.guest, FOLLOW_INDEX],
             [PROFILE_FOLLOW, self.guest, PROFILE_FOLLOW_REDIRECT],
-            [PROFILE_UNFOLLOW , self.guest, PROFILE_UNFOLLOW_REDIRECT],
+            [PROFILE_UNFOLLOW, self.guest, PROFILE_UNFOLLOW_REDIRECT],
             [self.POST_EDIT, self.authorized_client_new, self.POST_DETAIL],
             [PROFILE_FOLLOW, self.authorized_client_new, PROFILE_URL],
             [PROFILE_UNFOLLOW, self.authorized_client_new, PROFILE_URL],

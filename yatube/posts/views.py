@@ -27,8 +27,7 @@ def profile(request, username):
         and request.user.username != username
         and Follow.objects.filter(
             author=author,
-            user =request.user
-        ).exists())
+            user=request.user).exists())
     return render(request, 'posts/profile.html', {
         'author': author,
         'page_obj': paginator_page(request, author.posts.all()),
@@ -95,7 +94,7 @@ def follow_index(request):
         author__following__user=request.user
     )
     return render(
-        request,'posts/follow.html',
+        request, 'posts/follow.html',
         {'page_obj': paginator_page(request, post_follow)})
 
 
