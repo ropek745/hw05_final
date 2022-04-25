@@ -32,8 +32,8 @@ PROFILE_UNFOLLOW = reverse(
 
 CREATE_REDIRECT = f'{LOGIN}?next={CREATE_URL}'
 FOLLOW_REDIRECT = f'{LOGIN}?next={FOLLOW_INDEX}'
-PROFILE_FOLLOW_REDIRECT = f'{LOGIN}?next={PROFILE_URL}follow/'
-PROFILE_UNFOLLOW_REDIRECT = f'{LOGIN}?next={PROFILE_URL}unfollow/'
+PROFILE_FOLLOW_REDIRECT = f'{LOGIN}?next={PROFILE_FOLLOW}'
+PROFILE_UNFOLLOW_REDIRECT = f'{LOGIN}?next={PROFILE_UNFOLLOW}'
 
 
 class PostURLTests(TestCase):
@@ -58,11 +58,9 @@ class PostURLTests(TestCase):
             'posts:post_edit', kwargs={'post_id': cls.post.id}
         )
         cls.EDIT_REDIRECT = f'{LOGIN}?next={cls.POST_EDIT}'
-        cls.COMMENT_REDIRECT = f'{LOGIN}?next={cls.POST_EDIT}comment/'
         cls.guest = Client()
-        cls.another = Client()
-        cls.author = Client()
         cls.authorized_client_new = Client()
+        cls.author = Client()
         cls.author.force_login(cls.user)
         cls.authorized_client_new.force_login(cls.new_user)
 
@@ -70,24 +68,26 @@ class PostURLTests(TestCase):
         """Проверка доступности адресов страниц для пользователя"""
         urls_names = [
             [INDEX_URL, self.guest, OK],
-            [CREATE_URL, self.another, REDIRECT],
+            [CREATE_URL, self.authorized_client_new, OK],
             [GROUP_LIST_URL, self.guest, OK],
             [PROFILE_URL, self.guest, OK],
             [self.POST_DETAIL, self.guest, OK],
-            [self.POST_EDIT, self.another, REDIRECT],
+            [self.POST_EDIT, self.authorized_client_new, REDIRECT],
             [CREATE_URL, self.author, OK],
             [self.POST_EDIT, self.author, OK],
-            [self.POST_EDIT, self.another, REDIRECT],
+            [self.POST_EDIT, self.authorized_client_new, REDIRECT],
             [NOT_FOUND_ULR, self.guest, FAILED],
             [FOLLOW_INDEX, self.author, OK],
-            [PROFILE_FOLLOW, self.author, REDIRECT],
-            [PROFILE_UNFOLLOW, self.guest, REDIRECT],
             [FOLLOW_INDEX, self.guest, REDIRECT],
+            [PROFILE_FOLLOW, self.author, REDIRECT],
             [PROFILE_FOLLOW, self.guest, REDIRECT],
-            [PROFILE_UNFOLLOW, self.another, REDIRECT],
+            [PROFILE_FOLLOW, self.authorized_client_new, REDIRECT],
+            [PROFILE_UNFOLLOW, self.author, FAILED],
+            [PROFILE_UNFOLLOW, self.guest, REDIRECT],
+            [PROFILE_UNFOLLOW, self.authorized_client_new, REDIRECT]
         ]
         for url, client, status in urls_names:
-            with self.subTest(url=url, status=status):
+            with self.subTest(url=url, status=status, client=client):
                 self.assertEqual(client.get(url).status_code, status)
 
     def url_redirect_anonymous_on_admin_login(self):
@@ -98,10 +98,13 @@ class PostURLTests(TestCase):
         urls_redirect_list = [
             [CREATE_URL, self.guest, CREATE_REDIRECT],
             [self.POST_EDIT, self.guest, self.EDIT_REDIRECT],
-            [self.POST_EDIT, self.authorized_client_new, self.POST_DETAIL],
             [FOLLOW_INDEX, self.guest, FOLLOW_INDEX],
             [PROFILE_FOLLOW, self.guest, PROFILE_FOLLOW_REDIRECT],
-            [PROFILE_UNFOLLOW, self.guest, PROFILE_UNFOLLOW_REDIRECT],
+            [PROFILE_UNFOLLOW , self.guest, PROFILE_UNFOLLOW_REDIRECT],
+            [self.POST_EDIT, self.authorized_client_new, self.POST_DETAIL],
+            [PROFILE_FOLLOW, self.authorized_client_new, PROFILE_URL],
+            [PROFILE_UNFOLLOW, self.authorized_client_new, PROFILE_URL],
+            [PROFILE_FOLLOW, self.author, PROFILE_URL],
         ]
         for url, client, redirect in urls_redirect_list:
             with self.subTest(url=url, redirect=redirect):

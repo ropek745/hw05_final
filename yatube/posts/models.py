@@ -101,7 +101,7 @@ class Follow(models.Model):
     )
 
     def __str__(self):
-        return (self.user.username, self.author.username)
+        return (f'{self.user.username} подписан на {self.author.username}')
 
     class Meta:
         constraints = [

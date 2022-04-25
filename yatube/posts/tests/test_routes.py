@@ -1,12 +1,13 @@
 from django.test import TestCase
 from django.urls import reverse
 
+from ..urls import app_name
+
 ID = 5
 USERNAME = 'Roman'
 SLUG = 'test-slug'
-APP_NAME = 'posts'
 
-ROUTES = [
+CASES = [
     ['/', 'index', []],
     [f'/group/{SLUG}/', 'posts_slug', [SLUG]],
     ['/create/', 'post_create', []],
@@ -22,9 +23,9 @@ ROUTES = [
 
 class TestRoutes(TestCase):
     def test_routes(self):
-        for url, route, args in ROUTES:
+        for url, route, args in CASES:
             with self.subTest(url=url, route=route, args=args):
                 self.assertEqual(
                     url,
-                    reverse(f'{APP_NAME}:{route}', args=args)
+                    reverse(f'{app_name}:{route}', args=args)
                 )
