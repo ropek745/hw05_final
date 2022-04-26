@@ -131,7 +131,7 @@ class PostsPagesTest(TestCase):
         response_3 = self.authorized.get(INDEX_URL).content
         self.assertNotEqual(response_1, response_3)
 
-    def test_post_following_author(self):
+    def test_post_is_not_in_group_and_feed(self):
         """
         Пост не отображается в другой группе и не появляется в ленте тех,
         кто не подписан на пользователя.
@@ -154,15 +154,10 @@ class PostsPagesTest(TestCase):
         self.assertTrue(follow.exists())
 
     def test_unfollow(self):
-        self.authorized.get(UNFOLLOW)
-        follow = Follow.objects.filter(user=self.user, author=self.follower)
+        Follow.objects.create(user=self.follower, author=self.user)
+        self.follow.get(UNFOLLOW)
+        follow = Follow.objects.filter(user=self.follower, author=self.user)
         self.assertFalse(follow.exists())
-
-    def test_new_post_in_another_group(self):
-        """Наличие поста в другой группе"""
-        self.assertNotIn(
-            self.post,
-            self.authorized.get(GROUP_LIST_URL_2).context['page_obj'])
 
 
 class PaginatorViewsTest(TestCase):

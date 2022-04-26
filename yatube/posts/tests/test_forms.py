@@ -8,7 +8,6 @@ from django.test import Client, TestCase, override_settings
 from django.urls import reverse
 
 from ..models import Group, Post, User, Comment
-from ..urls import app_name
 
 IMAGE_GIF_1 = (
     b'\x47\x49\x46\x38\x39\x61\x02\x00'
@@ -26,6 +25,7 @@ IMAGE_GIF_2 = (
     b'\x02\x00\x01\x00\x00\x02\x02\x0C'
     b'\x0A\x00\x3A'
 )
+UPLOAD_TO = 'posts/'
 IMAGE_NAME = 'small.gif'
 IMAGE_NAME_2 = 'small_2.jpg'
 IMAGE_TYPE_1 = 'image/gif'
@@ -39,6 +39,7 @@ GROUP_TITLE_NEW = 'Новая тестовая группа'
 GROUP_SLUG_NEW = 'test-slug-new'
 GROUP_DESCRIPTION_NEW = 'Новое тестовое описание'
 USERNAME = 'Roman'
+AUTHOR = 'Pekarev'
 
 COMMENT_TEXT = 'Текст комментария'
 NEW_COMMENT = 'Yes'
@@ -59,7 +60,6 @@ class PostCreateFormTests(TestCase):
     def setUpClass(cls):
         super().setUpClass()
         cls.user = User.objects.create_user(username=USERNAME)
-        cls.test = User.objects.create_user(username='Assan')
         cls.group = Group.objects.create(
             title=GROUP_TITLE,
             slug=GROUP_SLUG,
@@ -85,8 +85,6 @@ class PostCreateFormTests(TestCase):
         cls.anomymus = Client()
         cls.authorized_client = Client()
         cls.authorized_client.force_login(cls.user)
-        cls.another = Client()
-        cls.another.force_login(cls.test)
         cls.image = SimpleUploadedFile(
             name=IMAGE_NAME,
             content=IMAGE_GIF_1,
@@ -105,7 +103,7 @@ class PostCreateFormTests(TestCase):
 
     def test_post_create(self):
         Post.objects.all().delete()
-        image_test = SimpleUploadedFile(
+        image = SimpleUploadedFile(
             name=IMAGE_NAME,
             content=IMAGE_GIF_1,
             content_type=IMAGE_TYPE_1,
@@ -113,7 +111,7 @@ class PostCreateFormTests(TestCase):
         form_data = {
             'text': POST_TEXT,
             'group': self.group.id,
-            'image': image_test
+            'image': image
         }
         response = self.authorized_client.post(
             CREATE_URL,
@@ -126,7 +124,7 @@ class PostCreateFormTests(TestCase):
         self.assertEqual(post.group.id, form_data['group'])
         self.assertEqual(
             post.image.name,
-            f"{app_name}/{form_data['image'].name}"
+            f"{UPLOAD_TO}{form_data['image'].name}"
         )
         self.assertRedirects(response, PROFILE_URL)
 
@@ -147,7 +145,7 @@ class PostCreateFormTests(TestCase):
         self.assertEqual(post.author, self.post.author)
         self.assertEqual(
             post.image.name,
-            f"{app_name}/{form_data['image'].name}"
+            f"{UPLOAD_TO}{form_data['image'].name}"
         )
         self.assertRedirects(response, self.POST_DETAIL_URL)
 
@@ -227,7 +225,10 @@ class PostCreateFormTests(TestCase):
         self.assertEqual(Post.objects.count(), 0)
         self.assertRedirects(response, CREATE_REDIRECT)
 
-    def test_anonymus_edit_post(self):
+    def test_attemps_anonymus_or_non_author_edit_post(self):
+        self.another_user = User.objects.create_user(username=AUTHOR)
+        self.another = Client()
+        self.another.force_login(self.another_user)
         users_urls_list = [
             [self.anomymus, self.EDIT_REDIRECT],
             [self.another, self.POST_DETAIL_URL],
@@ -253,4 +254,5 @@ class PostCreateFormTests(TestCase):
                 self.assertEqual(self.post.text, post.text)
                 self.assertEqual(self.post.group, post.group)
                 self.assertEqual(self.post.author, post.author)
+                self.assertEqual(self.post.image, post.image)
                 self.assertRedirects(response, url)

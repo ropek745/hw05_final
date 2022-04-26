@@ -92,16 +92,18 @@ class Follow(models.Model):
     user = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
-        related_name='follower'
+        related_name='follower',
+        verbose_name='Подписчик',
     )
     author = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
-        related_name='following'
+        related_name='following',
+        verbose_name='Подписка',
     )
 
     def __str__(self):
-        return (f'{self.user.username} подписан на {self.author.username}')
+        return f'{self.user.username} подписан на {self.author.username}'
 
     class Meta:
         constraints = [

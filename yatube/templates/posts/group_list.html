@@ -10,8 +10,8 @@
   <h1>{{ group.title }}</h1>
   <h4> {{ group.description|linebreaks }} </h4>
   {% for post in page_obj %}
-    {% include 'posts/includes/posts.html' %}
-    {% if not forloop.last %}<hr>{% endif %}
+    {% include 'posts/includes/post.html' with non_group=True%}
+  {% if not forloop.last %}<hr>{% endif %}
   {% endfor %}
  
 {% endblock %}

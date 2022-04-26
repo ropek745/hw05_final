@@ -10,13 +10,12 @@
   <div class='container py-5'> 
     {% include 'posts/includes/switcher.html' with index=True %} 
   {% cache 20 index_page with page_obj %} 
-  <h1>Главная страница</h1> 
-  <h4>Последние записи пользователей</h4> 
+    <h1>Главная страница</h1> 
+    <h4>Последние записи пользователей</h4> 
   {% for post in page_obj %}
-    {% include 'posts/includes/posts.html' %}
+    {% include 'posts/includes/post.html'%}
   {% if not forloop.last %}<hr>{% endif %} 
 {% endfor %} 
-{% include 'posts/includes/paginator.html' %} 
+  {% include 'posts/includes/paginator.html' %} 
 {% endcache %}  
-
 {% endblock %} 
